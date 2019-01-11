@@ -22,7 +22,6 @@
 //    [self.view addSubview:view];
     
     GQYVerticalSlider *slider = [[GQYVerticalSlider alloc]initWithFrame:CGRectMake(100, 200, 20, 200)];
-//    slider.frame = CGRectMake(100, 200, 20, 200);
     [self.view addSubview:slider];
     
     slider.maximumValue = 100;
