@@ -7,7 +7,7 @@
 //
 
 #import "GQYVerticalSlider.h"
-#import "Masonry.h"
+
 @interface GQYVerticalSlider()<CAAnimationDelegate>
 @property (nonatomic,strong)UIImageView *minImageView;
 @property (nonatomic,strong)UIImageView *maxImageView;
@@ -19,6 +19,9 @@
 @property (nonatomic,strong)UIPanGestureRecognizer * recognizer;
 
 @property (nonatomic,strong)CABasicAnimation * ani;
+
+
+
 @end
 @implementation GQYVerticalSlider
 
@@ -38,37 +41,31 @@
 
 
 #pragma  mark - UI
+- (void)layoutSubviews{
+    [super layoutSubviews];
+    NSLog(@"%@",self.subviews);
+}
 - (void)confiMask{
     CGRect bounds = self.bounds;
     bounds.size.height = self.frame.size.height;
     UIBezierPath *path = [UIBezierPath bezierPathWithRect:bounds];
     self.maskLayer.path = path.CGPath;
-//    self.maskLayer.frame = bounds;
+    //    self.maskLayer.frame = bounds;
     self.minImageView.layer.mask = self.maskLayer;
     
 }
 - (void)masLayoutSubviews{
-    
+    self.minImageView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+    self.maxImageView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+    self.thumbImageView.frame = CGRectMake(0,0, self.thumbImageView.image.size.width, self.thumbImageView.image.size.height);
+    CGFloat p = (-self.minimumValue)*(self.frame.size.height-self.thumbImageView.frame.size.height)-self.frame.size.height + self.thumbImageView.frame.size.height/2;
+    CGPoint center = CGPointMake(self.frame.size.width/2, -p);
+    self.thumbImageView.center = center;
+    self.minImageView.center = CGPointMake(self.frame.size.width/2, self.bounds.size.height/2);
+    self.maxImageView.center = CGPointMake(self.frame.size.width/2, self.bounds.size.height/2);
     [self addSubview:self.maxImageView];
     [self addSubview:self.minImageView];
     [self addSubview:self.thumbImageView];
-    
-    [self.minImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.edges.equalTo(self);
-    }];
-    
-    [self.maxImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.edges.equalTo(self.minImageView);
-    }];
-    
-    [self.thumbImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.mas_equalTo(self);
-        make.bottom.mas_equalTo(self);
-    }];
-    
-
-    
-    
 }
 
 - (void)addPan{
@@ -84,13 +81,13 @@
     }
     _value = value;
     if (animated == YES) {
-
+        
         [UIView animateWithDuration:.1 animations:^{
-            CGFloat p = self.frame.size.height * (1-((value-self.minimumValue)/(self.maximumValue-self.minimumValue)));
-            CGPoint center = CGPointMake(self.thumbImageView.center.x, p);
+            CGFloat p = (value-self.minimumValue)*(self.frame.size.height-self.thumbImageView.frame.size.height)/(self.maximumValue-self.minimumValue)-self.frame.size.height + self.thumbImageView.frame.size.height/2;
+            CGPoint center = CGPointMake(self.thumbImageView.center.x, -p);
             self.thumbImageView.center = center;
         }];
-
+        
         CABasicAnimation *aniY = [CABasicAnimation animationWithKeyPath:@"position.y"];
         CGRect bounds = self.bounds;
         bounds.size.height = self.frame.size.height * (((value-self.minimumValue)/(self.maximumValue-self.minimumValue)));
@@ -99,14 +96,14 @@
         aniY.removedOnCompletion = NO;
         aniY.duration = .1;
         [self.minImageView.layer.mask addAnimation:aniY forKey:@"aniY"];
-
+        
     }else{
+
         [self fillWithValue:value];
-        CGFloat p = self.frame.size.height * (1-((value-self.minimumValue)/(self.maximumValue-self.minimumValue)));
-        CGPoint center = CGPointMake(self.thumbImageView.center.x, p);
+        CGFloat p = (value-self.minimumValue)*(self.frame.size.height-self.thumbImageView.frame.size.height)/(self.maximumValue-self.minimumValue)-self.frame.size.height + self.thumbImageView.frame.size.height/2;
+        CGPoint center = CGPointMake(self.thumbImageView.center.x, -p);
         self.thumbImageView.center = center;
     }
-
 }
 
 - (void)fillWithValue:(CGFloat)value{
@@ -123,7 +120,7 @@
 
 #pragma  mark - Animation Delegate
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag{
-   CAAnimation *ani = [self.maskLayer animationForKey:@"aniY"];
+    CAAnimation *ani = [self.maskLayer animationForKey:@"aniY"];
     if (flag && ani==anim) {
         [self fillWithValue:_value];
         [self.maskLayer removeAnimationForKey:@"aniY"];
@@ -131,8 +128,9 @@
 }
 #pragma  mark - Action
 - (void)moveSlider:(UIPanGestureRecognizer *)recognizer{
+    
     if (recognizer.state == UIGestureRecognizerStateChanged) {
-//        NSLog(@"self.thumbImageView.frame.origin.y==%f",self.thumbImageView.frame.origin.y);
+        //        NSLog(@"self.thumbImageView.frame.origin.y==%f",self.thumbImageView.frame.origin.y);
         if (self.thumbImageView.frame.origin.y + self.thumbImageView.frame.size.height <= self.frame.size.height &&
             self.thumbImageView.frame.origin.y >= 0
             ) {
@@ -140,7 +138,7 @@
             translation = CGPointApplyAffineTransform(translation, self.thumbImageView.transform);
             CGFloat moveY;
             moveY = self.thumbImageView.center.y + translation.y;
-//            NSLog(@"MOVEY=%f",moveY);
+            //            NSLog(@"MOVEY=%f",moveY);
             if (self.thumbImageView.center.y + translation.y > self.frame.size.height - self.thumbImageView.frame.size.height/2 ) {
                 moveY = self.frame.size.height - self.thumbImageView.frame.size.height/2;
                 
@@ -153,25 +151,36 @@
             [recognizer setTranslation:CGPointZero inView:self]; // 移动的时候，注意在最后重设当前的 translation。
             
             CGFloat value =  (self.frame.size.height - self.thumbImageView.center.y - self.thumbImageView.frame.size.height/2)/(self.frame.size.height-self.thumbImageView.frame.size.height) * (self.maximumValue-self.minimumValue) + self.minimumValue;
-
+            
             [self fillWithValue:value];
             
             if (self.touchSliderValueChange) {
-                self.touchSliderValueChange(value);
+                self.touchSliderValueChange(value,NO);
             }
+        }
+    }else{
+        if (self.touchSliderValueChange) {
+            self.touchSliderValueChange(self.value,YES);
         }
     }
 }
 
 
 #pragma  mark - GET SET
-
+- (void)sizeToFit{
+    [super sizeToFit];
+    [self.thumbImageView sizeToFit];
+    [self.maxImageView sizeToFit];
+    [self.minImageView sizeToFit];
+    
+}
 - (void)setValue:(float)value{
     if (value<self.minimumValue) {
         value = self.minimumValue;
     }
     _value = value;
-    [self setValue:value animated:YES];
+    [self setValue:value animated:NO];
+    [self layoutIfNeeded];
 }
 
 
@@ -184,16 +193,19 @@
 - (void)setMinImage:(UIImage *)minImage{
     _minImage = minImage;
     self.minImageView.image = minImage;
+    [self.minImageView sizeToFit];
 }
 
 - (void)setMaxImage:(UIImage *)maxImage{
     _maxImage = maxImage;
     self.maxImageView.image = maxImage;
+    [self.maxImageView sizeToFit];
 }
 
 - (void)setThumbImage:(UIImage *)thumbImage{
     _thumbImage = thumbImage;
     self.thumbImageView.image = thumbImage;
+    [self.thumbImageView sizeToFit];
 }
 
 - (UIImageView *)minImageView{

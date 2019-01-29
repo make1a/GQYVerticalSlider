@@ -21,17 +21,21 @@
 //    view.backgroundColor = [UIColor redColor];
 //    [self.view addSubview:view];
     
-    GQYVerticalSlider *slider = [[GQYVerticalSlider alloc]initWithFrame:CGRectMake(100, 200, 20, 200)];
+    GQYVerticalSlider *slider = [[GQYVerticalSlider alloc]initWithFrame:CGRectMake(100, 200, 10, 100)];
+//    [slider sizeToFit];
     [self.view addSubview:slider];
     
     slider.maximumValue = 100;
     slider.minimumValue = 30;
 
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [slider setValue:34 animated:YES];
-        
-    });
+    slider.touchSliderValueChange = ^(CGFloat value,BOOL isEnd) {
+        NSLog(@"%f",value);
+    };
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [slider setValue:88 animated:YES];
+//    });
+//    slider.value = 84;
 }
 
 
